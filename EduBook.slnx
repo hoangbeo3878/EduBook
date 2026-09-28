@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="EduBook.Api/EduBook.Api.csproj" />
+  <Project Path="EduBook.Application/EduBook.Application.csproj" />
+  <Project Path="EduBook.Domain/EduBook.Domain.csproj" />
+  <Project Path="EduBook.Infrastructure/EduBook.Infrastructure.csproj" />
+</Solution>
