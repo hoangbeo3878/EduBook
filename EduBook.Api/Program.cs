@@ -1,6 +1,8 @@
+using EduBook.Application.Abstractions.Services;
 using EduBook.Domain.Entities;
 using EduBook.Domain.Enums;
 using EduBook.Infrastructure.Data;
+using EduBook.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +10,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+//DI 
+builder.Services.AddScoped<IBookingService, BookingService>();
+//
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection");
 
