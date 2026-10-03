@@ -43,9 +43,6 @@ namespace EduBook.Api.Controllers
             var userId = GetUserId();
             if (userId == null) return Unauthorized();
 
-            if (string.IsNullOrWhiteSpace(req.DisplayName))
-                return BadRequest(new { message = "DisplayName is required." });
-
             var ids = (req.PreferredSubjectIds ?? new List<int>()).Distinct().ToList();
             var valid = await _db.Subjects.CountAsync(s => ids.Contains(s.Id));
             if (ids.Count != valid)

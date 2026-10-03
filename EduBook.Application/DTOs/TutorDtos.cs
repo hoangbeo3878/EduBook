@@ -1,11 +1,21 @@
-﻿namespace EduBook.Application.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace EduBook.Application.DTOs
 {
-    public record UpsertTutorProfileRequest(
-        string DisplayName,
-        string? Bio,
-        decimal HourlyRate,
-        List<int> SubjectIds
-    );
+    public record UpsertTutorProfileRequest
+    {
+        [Required]
+        [StringLength(200, MinimumLength = 2)]
+        public string DisplayName { get; init; } = string.Empty;
+
+        [StringLength(2000)]
+        public string? Bio { get; init; }
+
+        [Range(0, 999999)]
+        public decimal HourlyRate { get; init; }
+
+        public List<int>? SubjectIds { get; init; }
+    } 
 
     public record TutorListItemDto(
         Guid TutorProfileId,

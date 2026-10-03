@@ -35,7 +35,7 @@ namespace EduBook.Api.Controllers
         }
 
         // POST /api/subjects -> Tạo mới một Subject, chỉ Admin mới có quyền tạo
-        [Authorize(Roles = UserRoles.Admin)]
+        //[Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<ActionResult<SubjectDto>> Create(
             [FromBody] CreateSubjectRequest req)

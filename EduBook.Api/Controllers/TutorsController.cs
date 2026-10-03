@@ -90,9 +90,6 @@ namespace EduBook.Api.Controllers
             if (exists)
                 return Conflict(new { message = "Tutor profile already exists. Use PUT to update." });
 
-            if (req.HourlyRate < 0)
-                return BadRequest(new { message = "HourlyRate must be >= 0." });
-
             var subjectIds = (req.SubjectIds ?? new List<int>()).Distinct().ToList();
             var validCount = await _db.Subjects.CountAsync(s => subjectIds.Contains(s.Id));
             if (subjectIds.Count != validCount)
@@ -137,9 +134,6 @@ namespace EduBook.Api.Controllers
 
             if (profile == null)
                 return NotFound(new { message = "Create profile first (POST /api/tutors/me)." });
-
-            if (req.HourlyRate < 0)
-                return BadRequest(new { message = "HourlyRate must be >= 0." });
 
             var subjectIds = (req.SubjectIds ?? new List<int>()).Distinct().ToList();
             var validCount = await _db.Subjects.CountAsync(s => subjectIds.Contains(s.Id));

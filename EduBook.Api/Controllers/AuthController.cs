@@ -27,34 +27,29 @@ namespace EduBook.Api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
         {
-            if (string.IsNullOrWhiteSpace(req.Email) || !req.Email.Contains('@'))
-                return BadRequest(new { message = "Valid email is required." });
-
-            if (string.IsNullOrWhiteSpace(req.Password) || req.Password.Length < 6)
-                return BadRequest(new { message = "Password must be at least 6 characters." });
-
-            if (string.IsNullOrWhiteSpace(req.FullName))
-                return BadRequest(new { message = "FullName is required." });
 
             if (req.Role is not (UserRoles.Student or UserRoles.Tutor))
             {
                 return BadRequest(new { message = "Role must be Student or Tutor." });
             }
 
-            var existing = await _userManager.FindByEmailAsync(req.Email);
-            if (existing != null)
-            {
-                return Conflict(new { message = "Email already registered." });
-            }
+            var email = req.Email.Trim().ToLowerInvariant();
+            var fullName = req.FullName.Trim();
 
             var user = new User
             {
                 Id = Guid.CreateVersion7(),
-                UserName = req.Email,
-                Email = req.Email,
-                FullName = req.FullName,
+                UserName = email,
+                Email = email,
+                FullName = fullName,
                 CreatedAt = DateTimeOffset.UtcNow
             };
+
+            var existing = await _userManager.FindByEmailAsync(req.Email);
+            if (existing != null)
+            {
+                return Conflict(new { message = "Email already registered." });
+            }   
 
             var result = await _userManager.CreateAsync(user, req.Password);
             if (!result.Succeeded)

@@ -7,9 +7,11 @@ out/
 .vs/
 *.swp
 
-## Secrets (không push connection string máy local)
-appsettings.Development.json
-appsettings.*.local.json
+## Secrets & Local Configurations
+**/appsettings.json
+**/appsettings.Development.json
+**/appsettings.*.local.json
+**/appsettings.Local.json
 
 ## OS
 Thumbs.db

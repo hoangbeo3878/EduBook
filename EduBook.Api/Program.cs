@@ -15,7 +15,9 @@ var app = builder.Build();
 // Tạo các Roles mặc định (Student, Tutor)
 using (var scope = app.Services.CreateScope())
 {
-    await DbSeeder.SeedAsync(scope.ServiceProvider);
+    await DbSeeder.SeedAsync(
+        scope.ServiceProvider,
+        app.Configuration);
 }
 
 app.UseHttpsRedirection();
