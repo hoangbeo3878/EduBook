@@ -9,4 +9,6 @@ public class User : IdentityUser<Guid>
 
     public TutorProfile? TutorProfile { get; set; }
     public ICollection<Booking> BookingsAsStudent { get; set; } = new List<Booking>();
+
+    public StudentProfile? StudentProfile { get; set; }
 }

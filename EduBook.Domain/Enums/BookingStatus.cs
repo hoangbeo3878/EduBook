@@ -3,5 +3,6 @@
 public enum BookingStatus
 {
     Confirmed = 0,  // auto-confirm khi đặt
-    Cancelled = 1
+    Cancelled = 1,
+    Completed = 2
 }

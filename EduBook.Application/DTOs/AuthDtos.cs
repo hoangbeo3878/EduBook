@@ -19,3 +19,10 @@ public record AuthResponse(
     string Role,
     string? FullName
 );
+
+public record MeResponse(
+    Guid UserId,
+    string Email,
+    string Role,
+    string? FullName
+);

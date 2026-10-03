@@ -12,4 +12,6 @@
         DateTimeOffset EndUtc,
         string Status
     );
+
+    public record CreateSlotsBulkRequest(List<CreateSlotRequest> Slots);
 }

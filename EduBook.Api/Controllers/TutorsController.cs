@@ -20,7 +20,7 @@ namespace EduBook.Api.Controllers
             _db = db;
         }
 
-        // GET /api/tutors?subjectId=1
+        // GET /api/tutors?subjectId=1 -> lấy ds tutor, có thể lọc theo subjectId
         [HttpGet]
         public async Task<ActionResult<List<TutorListItemDto>>> GetList([FromQuery] int? subjectId)
         {
@@ -50,7 +50,7 @@ namespace EduBook.Api.Controllers
             return Ok(list);
         }
 
-        // GET /api/tutors/{id}
+        // GET /api/tutors/{id} —> lấy chi tiết hồ sơ tutor
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<TutorDetailDto>> GetById(Guid id)
         {
@@ -78,7 +78,7 @@ namespace EduBook.Api.Controllers
             return Ok(dto);
         }
 
-        // POST /api/tutors/me  — tạo hồ sơ (chỉ Tutor)
+        // POST /api/tutors/me  —> tạo hồ sơ (chỉ Tutor)
         [Authorize(Roles = UserRoles.Tutor)]
         [HttpPost("me")]
         public async Task<ActionResult<TutorDetailDto>> CreateMyProfile(
@@ -123,7 +123,7 @@ namespace EduBook.Api.Controllers
             return await GetById(profile.Id);
         }
 
-        // PUT /api/tutors/me
+        // PUT /api/tutors/me -> cập nhật hồ sơ của chính tutor đang đăng nhập
         [Authorize(Roles = UserRoles.Tutor)]
         [HttpPut("me")]
         public async Task<ActionResult<TutorDetailDto>> UpdateMyProfile(
@@ -161,6 +161,38 @@ namespace EduBook.Api.Controllers
 
             await _db.SaveChangesAsync();
             return await GetById(profile.Id);
+        }
+
+        // GET /api/tutors/me -> lấy hồ sơ của chính tutor đang đăng nhập
+        [Authorize(Roles = UserRoles.Tutor)]
+        [HttpGet("me")]
+        public async Task<ActionResult<TutorDetailDto>> GetMe()
+        {
+            var userId = GetUserIdOrThrow(); // hoặc pattern Guid? như Students
+
+            var t = await _db.TutorProfiles
+                .AsNoTracking()
+                .Include(x => x.TutorSubjects)
+                    .ThenInclude(ts => ts.Subject)
+                .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            if (t == null)
+            {
+                return NotFound(new { message = "Profile not found. POST /api/tutors/me first." });
+            }
+
+            return Ok(new TutorDetailDto(
+                t.Id,
+                t.UserId,
+                t.DisplayName,
+                t.Bio,
+                t.HourlyRate,
+                t.IsActive,
+                t.TutorSubjects
+                    .Select(ts => new SubjectDto(
+                        ts.Subject.Id, ts.Subject.Name, ts.Subject.Description))
+                    .ToList()
+            ));
         }
 
         private Guid GetUserIdOrThrow()

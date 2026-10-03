@@ -4,4 +4,5 @@ public static class UserRoles
 {
     public const string Student = "Student";
     public const string Tutor = "Tutor";
+    public const string Admin = "Admin";
 }

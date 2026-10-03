@@ -1,4 +1,5 @@
-﻿using EduBook.Domain.Entities;
+﻿using EduBook.Application.DTOs;
+using EduBook.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<TutorSubject> TutorSubjects => Set<TutorSubject>();
     public DbSet<AvailabilitySlot> AvailabilitySlots => Set<AvailabilitySlot>();
     public DbSet<Booking> Bookings => Set<Booking>();
+    public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
+    public DbSet<StudentSubject> StudentSubjects => Set<StudentSubject>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -36,6 +39,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
                 .WithMany(s => s.TutorSubjects)
                 .HasForeignKey(x => x.SubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasQueryFilter(x => !x.Subject.IsDeleted);
         });
 
         // User 1-1 TutorProfile
@@ -51,9 +56,14 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             e.Property(x => x.Bio).HasMaxLength(2000);
         });
 
+        // Subject
         builder.Entity<Subject>(e =>
         {
-            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Name)
+               .HasMaxLength(200)
+               .IsRequired();
+
+            e.HasQueryFilter(x => !x.IsDeleted);
         });
 
         // Slot thuộc Tutor
@@ -65,6 +75,31 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
                 .OnDelete(DeleteBehavior.Cascade);
 
             e.HasIndex(x => new { x.TutorProfileId, x.StartUtc });
+        });
+
+        builder.Entity<StudentProfile>(e =>
+        {
+            e.HasOne(x => x.User)
+                .WithOne(u => u.StudentProfile)
+                .HasForeignKey<StudentProfile>(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.Property(x => x.DisplayName).HasMaxLength(200);
+        });
+
+        builder.Entity<StudentSubject>(e =>
+        {
+            e.HasKey(x => new { x.StudentProfileId, x.SubjectId });
+
+            e.HasOne(x => x.StudentProfile)
+                .WithMany(p => p.PreferredSubjects)
+                .HasForeignKey(x => x.StudentProfileId);
+
+            e.HasOne(x => x.Subject)
+                .WithMany()
+                .HasForeignKey(x => x.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasQueryFilter(x => !x.Subject.IsDeleted);
         });
 
         // Booking 1-1 Slot + thuộc Student

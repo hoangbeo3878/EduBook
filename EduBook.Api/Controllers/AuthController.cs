@@ -1,12 +1,13 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using EduBook.Application.DTOs;
+﻿using EduBook.Application.DTOs;
 using EduBook.Domain.Entities;
 using EduBook.Domain.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace EduBook.Api.Controllers
 {
@@ -26,6 +27,15 @@ namespace EduBook.Api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
         {
+            if (string.IsNullOrWhiteSpace(req.Email) || !req.Email.Contains('@'))
+                return BadRequest(new { message = "Valid email is required." });
+
+            if (string.IsNullOrWhiteSpace(req.Password) || req.Password.Length < 6)
+                return BadRequest(new { message = "Password must be at least 6 characters." });
+
+            if (string.IsNullOrWhiteSpace(req.FullName))
+                return BadRequest(new { message = "FullName is required." });
+
             if (req.Role is not (UserRoles.Student or UserRoles.Tutor))
             {
                 return BadRequest(new { message = "Role must be Student or Tutor." });
@@ -79,6 +89,25 @@ namespace EduBook.Api.Controllers
 
             var token = CreateToken(user, role);
             return Ok(new AuthResponse(token, user.Id, user.Email!, role, user.FullName));
+        }
+
+        // GET /api/auth/me
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<ActionResult<MeResponse>> Me()
+        {
+            var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(raw, out var userId))
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return Unauthorized();
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? UserRoles.Student;
+
+            return Ok(new MeResponse(user.Id, user.Email!, role, user.FullName));
         }
 
         private string CreateToken(User user, string role)
