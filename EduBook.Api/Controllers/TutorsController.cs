@@ -1,11 +1,11 @@
-﻿using System.Security.Claims;
-using EduBook.Application.DTOs;
+﻿using EduBook.Application.DTOs;
 using EduBook.Domain.Entities;
 using EduBook.Domain.Enums;
 using EduBook.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using EduBook.Api.Extensions;
 
 namespace EduBook.Api.Controllers
 {
@@ -27,8 +27,6 @@ namespace EduBook.Api.Controllers
             var query = _db.TutorProfiles
                 .AsNoTracking()
                 .Where(t => t.IsActive)
-                .Include(t => t.TutorSubjects)
-                    .ThenInclude(ts => ts.Subject)
                 .AsQueryable();
 
             if (subjectId.HasValue)
@@ -84,7 +82,7 @@ namespace EduBook.Api.Controllers
         public async Task<ActionResult<TutorDetailDto>> CreateMyProfile(
             [FromBody] UpsertTutorProfileRequest req)
         {
-            var userId = GetUserIdOrThrow();
+            var userId = User.GetUserId();
 
             var exists = await _db.TutorProfiles.AnyAsync(t => t.UserId == userId);
             if (exists)
@@ -126,7 +124,7 @@ namespace EduBook.Api.Controllers
         public async Task<ActionResult<TutorDetailDto>> UpdateMyProfile(
             [FromBody] UpsertTutorProfileRequest req)
         {
-            var userId = GetUserIdOrThrow();
+            var userId = User.GetUserId();
 
             var profile = await _db.TutorProfiles
                 .Include(t => t.TutorSubjects)
@@ -162,7 +160,7 @@ namespace EduBook.Api.Controllers
         [HttpGet("me")]
         public async Task<ActionResult<TutorDetailDto>> GetMe()
         {
-            var userId = GetUserIdOrThrow(); // hoặc pattern Guid? như Students
+            var userId = User.GetUserId(); // hoặc pattern Guid? như Students
 
             var t = await _db.TutorProfiles
                 .AsNoTracking()
@@ -187,14 +185,6 @@ namespace EduBook.Api.Controllers
                         ts.Subject.Id, ts.Subject.Name, ts.Subject.Description))
                     .ToList()
             ));
-        }
-
-        private Guid GetUserIdOrThrow()
-        {
-            var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(raw) || !Guid.TryParse(raw, out var id))
-                throw new UnauthorizedAccessException();
-            return id;
         }
     }
 }

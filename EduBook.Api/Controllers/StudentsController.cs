@@ -5,7 +5,7 @@ using EduBook.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using EduBook.Api.Extensions;
 
 namespace EduBook.Api.Controllers
 {
@@ -25,10 +25,9 @@ namespace EduBook.Api.Controllers
         [HttpGet("me")]
         public async Task<ActionResult<StudentProfileDto>> GetMe()
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
+            var userId = User.GetUserId();
 
-            var p = await LoadProfile(userId.Value);
+            var p = await LoadProfile(userId);
             if (p == null)
                 return NotFound(new { message = "Profile not created yet. PUT /api/students/me first." });
 
@@ -40,8 +39,7 @@ namespace EduBook.Api.Controllers
         public async Task<ActionResult<StudentProfileDto>> UpsertMe(
             [FromBody] UpsertStudentProfileRequest req)
         {
-            var userId = GetUserId();
-            if (userId == null) return Unauthorized();
+            var userId = User.GetUserId();
 
             var ids = (req.PreferredSubjectIds ?? new List<int>()).Distinct().ToList();
             var valid = await _db.Subjects.CountAsync(s => ids.Contains(s.Id));
@@ -50,14 +48,14 @@ namespace EduBook.Api.Controllers
 
             var profile = await _db.StudentProfiles
                 .Include(x => x.PreferredSubjects)
-                .FirstOrDefaultAsync(x => x.UserId == userId.Value);
+                .FirstOrDefaultAsync(x => x.UserId == userId);
 
             if (profile == null)
             {
                 profile = new StudentProfile
                 {
                     Id = Guid.CreateVersion7(),
-                    UserId = userId.Value,
+                    UserId = userId,
                     DisplayName = req.DisplayName.Trim(),
                     Bio = req.Bio
                 };
@@ -82,7 +80,7 @@ namespace EduBook.Api.Controllers
             }
 
             await _db.SaveChangesAsync();
-            var loaded = await LoadProfile(userId.Value);
+            var loaded = await LoadProfile(userId);
             return Ok(ToDto(loaded!));
         }
 
@@ -95,11 +93,5 @@ namespace EduBook.Api.Controllers
             p.Id, p.UserId, p.DisplayName, p.Bio,
             p.PreferredSubjects.Select(x =>
                 new SubjectDto(x.Subject.Id, x.Subject.Name, x.Subject.Description)).ToList());
-
-        private Guid? GetUserId()
-        {
-            var raw = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(raw, out var id) ? id : null;
-        }
     }
 }
