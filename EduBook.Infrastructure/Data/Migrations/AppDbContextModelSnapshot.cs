@@ -188,7 +188,7 @@ namespace EduBook.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("[Status] = 0");
 
-                    b.ToTable("TutorApplication");
+                    b.ToTable("TutorApplications");
                 });
 
             modelBuilder.Entity("EduBook.Domain.Entities.TutorApplicationAvailability", b =>
@@ -214,7 +214,7 @@ namespace EduBook.Infrastructure.Data.Migrations
                     b.HasIndex("TutorApplicationId", "DayOfWeek", "StartTime", "EndTime")
                         .IsUnique();
 
-                    b.ToTable("TutorApplicationAvailability");
+                    b.ToTable("TutorApplicationAvailabilities");
                 });
 
             modelBuilder.Entity("EduBook.Domain.Entities.TutorApplicationSubject", b =>
@@ -229,7 +229,7 @@ namespace EduBook.Infrastructure.Data.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("TutorApplicationSubject");
+                    b.ToTable("TutorApplicationSubjects");
                 });
 
             modelBuilder.Entity("EduBook.Domain.Entities.TutorProfile", b =>

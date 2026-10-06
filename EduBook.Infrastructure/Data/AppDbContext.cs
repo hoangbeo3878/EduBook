@@ -20,6 +20,9 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<StudentProfile> StudentProfiles => Set<StudentProfile>();
     public DbSet<StudentSubject> StudentSubjects => Set<StudentSubject>();
+    public DbSet<TutorApplication> TutorApplications => Set<TutorApplication>();
+    public DbSet<TutorApplicationSubject> TutorApplicationSubjects => Set<TutorApplicationSubject>();
+    public DbSet<TutorApplicationAvailability> TutorApplicationAvailabilities => Set<TutorApplicationAvailability>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
