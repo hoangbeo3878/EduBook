@@ -1,4 +1,5 @@
-﻿using EduBook.Application.Abstractions.Services;
+﻿using EduBook.Api.Extensions;
+using EduBook.Application.Abstractions.Services;
 using EduBook.Application.DTOs;
 using EduBook.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,7 @@ public class AdminTutorApplicationsController : ControllerBase
     }
 
     // GET: api/admin/tutor-applications 
-    // /api/admin/tutor-applications?status=Pending 
+    // GET /api/admin/tutor-applications?status=Pending 
     // GET /api/admin/tutor-applications?search=nguyen 
     // GET /api/admin/tutor-applications?page=2&pageSize=10
     // -> Get a paginated list of tutor applications with optional filtering
@@ -58,6 +59,71 @@ public class AdminTutorApplicationsController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             return NotFound(new
+            {
+                message = ex.Message
+            });
+        }
+    }
+
+    // PATCH: api/admin/tutor-applications/{id}/approve -> Approve a specific tutor application by ID
+    [HttpPatch("{id:guid}/approve")]
+    public async Task<ActionResult<AdminTutorApplicationDetailDto>>
+    Approve(Guid id)
+    {
+        try
+        {
+            var adminUserId = User.GetUserId();
+
+            var result = await _service.ApproveAsync(
+                id,
+                adminUserId);
+
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                message = ex.Message
+            });
+        }
+    }
+
+    // PATCH: api/admin/tutor-applications/{id}/deny -> Deny a specific tutor application by ID
+    [HttpPatch("{id:guid}/deny")]
+    public async Task<ActionResult<AdminTutorApplicationDetailDto>>
+    Deny(
+        Guid id,
+        [FromBody] DenyTutorApplicationRequest request)
+    {
+        try
+        {
+            var adminUserId = User.GetUserId();
+
+            var result = await _service.DenyAsync(
+                id,
+                adminUserId,
+                request.AdminNote);
+
+            return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
             {
                 message = ex.Message
             });
