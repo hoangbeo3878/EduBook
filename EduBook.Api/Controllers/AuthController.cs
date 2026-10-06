@@ -27,12 +27,6 @@ namespace EduBook.Api.Controllers
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest req)
         {
-
-            if (req.Role is not (UserRoles.Student or UserRoles.Tutor))
-            {
-                return BadRequest(new { message = "Role must be Student or Tutor." });
-            }
-
             var email = req.Email.Trim().ToLowerInvariant();
             var fullName = req.FullName.Trim();
 
@@ -48,19 +42,45 @@ namespace EduBook.Api.Controllers
             var existing = await _userManager.FindByEmailAsync(req.Email);
             if (existing != null)
             {
-                return Conflict(new { message = "Email already registered." });
+                return Conflict(new 
+                {
+                    message = "Email already registered." 
+                });
             }   
 
-            var result = await _userManager.CreateAsync(user, req.Password);
+            var result = await _userManager.CreateAsync(
+                user,
+                req.Password);
+
             if (!result.Succeeded)
             {
-                return BadRequest(new { message = "Register failed.", errors = result.Errors });
+                return BadRequest(new 
+                { 
+                    message = "Register failed.",
+                    errors = result.Errors 
+                });
             }
 
-            await _userManager.AddToRoleAsync(user, req.Role);
+            var roleResult = await _userManager.AddToRoleAsync(user, UserRoles.Student);
 
-            var token = CreateToken(user, req.Role);
-            return Ok(new AuthResponse(token, user.Id, user.Email!, req.Role, user.FullName));
+            if (!roleResult.Succeeded)
+            {
+                var errors = string.Join(
+                    "; ",
+                    roleResult.Errors.Select(e => e.Description));
+
+                return BadRequest(new
+                {
+                    message = "Failed to assign default role.",
+                    errors
+                });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var token = CreateToken(user, UserRoles.Student);
+
+            return Ok(new AuthResponse(token, user.Id, user.Email!, UserRoles.Student, user.FullName));
         }
 
         // POST /api/auth/login

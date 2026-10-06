@@ -120,5 +120,71 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 
             e.Property(x => x.Note).HasMaxLength(500);
         });
+
+        // TutorApplication
+        builder.Entity<TutorApplication>(e =>
+        {
+            e.Property(x => x.Qualifications)
+                .HasMaxLength(2000)
+                .IsRequired();
+
+            e.Property(x => x.Introduction)
+                .HasMaxLength(2000);
+
+            e.Property(x => x.AdminNote)
+                .HasMaxLength(2000);
+
+            e.HasOne(x => x.User)
+                .WithMany(u => u.TutorApplications)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(x => x.ReviewedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasIndex(x => x.UserId)
+                .IsUnique()
+                .HasFilter("[Status] = 0");
+        });
+
+        // TutorApplication ↔ Subject (nhiều-nhiều)
+        builder.Entity<TutorApplicationSubject>(e =>
+        {
+            e.HasKey(x => new
+            {
+                x.TutorApplicationId,
+                x.SubjectId
+            });
+
+            e.HasOne(x => x.TutorApplication)
+                .WithMany(a => a.Subjects)
+                .HasForeignKey(x => x.TutorApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasOne(x => x.Subject)
+                .WithMany()
+                .HasForeignKey(x => x.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TutorApplication ↔ Availability (nhiều-nhiều)
+        builder.Entity<TutorApplicationAvailability>(e =>
+        {
+            e.HasOne(x => x.TutorApplication)
+                .WithMany(a => a.Availabilities)
+                .HasForeignKey(x => x.TutorApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            e.HasIndex(x => new
+            {
+                x.TutorApplicationId,
+                x.DayOfWeek,
+                x.StartTime,
+                x.EndTime
+            })
+            .IsUnique();
+        });
     }
 }

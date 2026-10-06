@@ -15,9 +15,6 @@ public record RegisterRequest
     [Required]
     [StringLength(100, MinimumLength = 2)]
     public string FullName { get; init; } = string.Empty;
-
-    [Required]
-    public string Role { get; init; } = string.Empty;
 }
 
 public record LoginRequest
