@@ -1,4 +1,5 @@
 ﻿using EduBook.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace EduBook.Application.DTOs;
 
@@ -42,3 +43,10 @@ public record PagedResult<T>(
     int TotalCount,
     int TotalPages
 );
+
+public record DenyTutorApplicationRequest
+{
+    [Required]
+    [StringLength(2000, MinimumLength = 5)]
+    public string AdminNote { get; init; } = string.Empty;
+}

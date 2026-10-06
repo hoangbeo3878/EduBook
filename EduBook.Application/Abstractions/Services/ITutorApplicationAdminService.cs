@@ -9,4 +9,13 @@ public interface ITutorApplicationAdminService
 
     Task<AdminTutorApplicationDetailDto> GetByIdAsync(
         Guid id);
+
+    Task<AdminTutorApplicationDetailDto> ApproveAsync(
+        Guid applicationId,
+        Guid adminUserId);
+
+    Task<AdminTutorApplicationDetailDto> DenyAsync(
+        Guid applicationId,
+        Guid adminUserId,
+        string adminNote);
 }
