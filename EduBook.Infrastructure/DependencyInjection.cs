@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ITutorApplicationService, TutorApplicationService>();
         services.AddScoped<ITutorApplicationAdminService, TutorApplicationAdminService>();
+        services.AddScoped<IAvailabilitySlotService, AvailabilitySlotService>();
 
         // Cấu hình ASP.NET Core Identity
         services.AddIdentity<User, IdentityRole<Guid>>(options =>
