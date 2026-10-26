@@ -48,6 +48,10 @@ public class AvailabilitySlotService : IAvailabilitySlotService
 
         // Check whether this slot overlaps any existing slot
         // belonging to the same tutor.
+        await using var transaction =
+    await _db.Database.BeginTransactionAsync(
+        System.Data.IsolationLevel.Serializable);
+
         var hasOverlap = await _db.AvailabilitySlots
             .AnyAsync(x =>
                 x.TutorProfileId == tutorProfile.Id &&
@@ -72,6 +76,8 @@ public class AvailabilitySlotService : IAvailabilitySlotService
         _db.AvailabilitySlots.Add(slot);
 
         await _db.SaveChangesAsync();
+
+        await transaction.CommitAsync();
 
         return ToDto(slot);
     }
