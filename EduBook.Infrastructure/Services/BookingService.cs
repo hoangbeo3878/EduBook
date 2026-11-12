@@ -3,6 +3,7 @@ using EduBook.Application.DTOs;
 using EduBook.Domain.Enums;
 using EduBook.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace EduBook.Infrastructure.Services
 {
@@ -65,10 +66,33 @@ namespace EduBook.Infrastructure.Services
             };
 
             _db.Bookings.Add(booking);
-            await _db.SaveChangesAsync();
-            await tx.CommitAsync();
+
+            try
+            {
+                await _db.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch (DbUpdateException ex)
+                when (IsUniqueConstraintViolation(ex))
+            {
+                await tx.RollbackAsync();
+
+                throw new InvalidOperationException(
+                    "This slot has already been booked by another student.",
+                    ex);
+            }
 
             return await MapDto(booking.Id);
+        }
+
+        private static bool IsUniqueConstraintViolation(
+            DbUpdateException ex)
+        {
+            var sqlException = ex.GetBaseException() as SqlException;
+
+            return sqlException != null &&
+                   (sqlException.Number == 2601 ||
+                    sqlException.Number == 2627);
         }
 
         public async Task<IReadOnlyList<BookingDto>> GetMyBookingsAsync(Guid userId, bool asTutor)
