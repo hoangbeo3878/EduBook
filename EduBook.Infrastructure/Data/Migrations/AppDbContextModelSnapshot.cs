@@ -75,7 +75,8 @@ namespace EduBook.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SlotId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[Status] = 0");
 
                     b.HasIndex("StudentId");
 
@@ -497,8 +498,8 @@ namespace EduBook.Infrastructure.Data.Migrations
             modelBuilder.Entity("EduBook.Domain.Entities.Booking", b =>
                 {
                     b.HasOne("EduBook.Domain.Entities.AvailabilitySlot", "Slot")
-                        .WithOne("Booking")
-                        .HasForeignKey("EduBook.Domain.Entities.Booking", "SlotId")
+                        .WithMany("Bookings")
+                        .HasForeignKey("SlotId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -674,7 +675,7 @@ namespace EduBook.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EduBook.Domain.Entities.AvailabilitySlot", b =>
                 {
-                    b.Navigation("Booking");
+                    b.Navigation("Bookings");
                 });
 
             modelBuilder.Entity("EduBook.Domain.Entities.StudentProfile", b =>

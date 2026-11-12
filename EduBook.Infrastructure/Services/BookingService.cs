@@ -17,7 +17,10 @@ namespace EduBook.Infrastructure.Services
             _db = db;
         }
 
-        public async Task<BookingDto> CreateAsync(Guid studentId, CreateBookingRequest request)
+
+        public async Task<BookingDto> CreateAsync(
+            Guid studentId,
+            CreateBookingRequest request)
         {
             if (request.SlotId == Guid.Empty)
                 throw new InvalidOperationException("Invalid slot ID.");
@@ -27,6 +30,8 @@ namespace EduBook.Infrastructure.Services
                     "Booking note cannot exceed 500 characters.");
 
             await using var tx = await _db.Database.BeginTransactionAsync();
+
+            var now = DateTimeOffset.UtcNow;
 
             var slot = await _db.AvailabilitySlots
                 .Include(s => s.TutorProfile)
@@ -42,12 +47,13 @@ namespace EduBook.Infrastructure.Services
             if (slot.Status != SlotStatus.Open)
                 throw new InvalidOperationException("Slot is not available.");
 
-            if (slot.StartUtc <= DateTimeOffset.UtcNow)
-                throw new InvalidOperationException("Cannot book a slot in the past.");
+            if (slot.StartUtc <= now)
+                throw new InvalidOperationException(
+                    "Cannot book a slot in the past.");
 
-            // Tutor không book slot của chính mình
             if (slot.TutorProfile.UserId == studentId)
-                throw new InvalidOperationException("Cannot book your own slot.");
+                throw new InvalidOperationException(
+                    "Cannot book your own slot.");
 
             var already = await _db.Bookings.AnyAsync(b =>
                 b.SlotId == slot.Id &&
@@ -65,7 +71,7 @@ namespace EduBook.Infrastructure.Services
                 StudentId = studentId,
                 Status = BookingStatus.Confirmed,
                 Note = request.Note,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now
             };
 
             _db.Bookings.Add(booking);
@@ -87,6 +93,7 @@ namespace EduBook.Infrastructure.Services
 
             return await MapDto(booking.Id);
         }
+
 
         private static bool IsUniqueConstraintViolation(
             DbUpdateException ex)
@@ -158,9 +165,8 @@ namespace EduBook.Infrastructure.Services
             booking.Status = BookingStatus.Cancelled;
             booking.CancelledAt = now;
 
-            // Chỉ mở lại Slot nếu Tutor vẫn hoạt động
-            // và thời gian bắt đầu vẫn còn trong tương lai.
             if (booking.Slot.TutorProfile.IsActive &&
+                booking.Slot.Status == SlotStatus.Booked &&
                 booking.Slot.StartUtc > now)
             {
                 booking.Slot.Status = SlotStatus.Open;
