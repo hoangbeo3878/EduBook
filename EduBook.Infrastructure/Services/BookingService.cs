@@ -143,14 +143,29 @@ namespace EduBook.Infrastructure.Services
             if (!isStudent && !isTutor)
                 throw new UnauthorizedAccessException("Not your booking.");
 
-            var remain = booking.Slot.StartUtc - DateTimeOffset.UtcNow;
+            var now = DateTimeOffset.UtcNow;
+            var remain = booking.Slot.StartUtc - now;
+
             if (remain < CancelMinBefore)
+            {
                 throw new InvalidOperationException(
                     $"Cancel only allowed at least {CancelMinBefore.TotalHours} hours before start.");
+            }
 
             booking.Status = BookingStatus.Cancelled;
-            booking.CancelledAt = DateTimeOffset.UtcNow;
-            booking.Slot.Status = SlotStatus.Open; // trả slot
+            booking.CancelledAt = now;
+
+            // Chỉ mở lại Slot nếu Tutor vẫn hoạt động
+            // và thời gian bắt đầu vẫn còn trong tương lai.
+            if (booking.Slot.TutorProfile.IsActive &&
+                booking.Slot.StartUtc > now)
+            {
+                booking.Slot.Status = SlotStatus.Open;
+            }
+            else
+            {
+                booking.Slot.Status = SlotStatus.Blocked;
+            }
 
             await _db.SaveChangesAsync();
             await tx.CommitAsync();
