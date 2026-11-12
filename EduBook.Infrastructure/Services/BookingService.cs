@@ -18,6 +18,13 @@ namespace EduBook.Infrastructure.Services
 
         public async Task<BookingDto> CreateAsync(Guid studentId, CreateBookingRequest request)
         {
+            if (request.SlotId == Guid.Empty)
+                throw new InvalidOperationException("Invalid slot ID.");
+
+            if (request.Note?.Length > 500)
+                throw new InvalidOperationException(
+                    "Booking note cannot exceed 500 characters.");
+
             await using var tx = await _db.Database.BeginTransactionAsync();
 
             var slot = await _db.AvailabilitySlots
@@ -26,6 +33,10 @@ namespace EduBook.Infrastructure.Services
 
             if (slot == null)
                 throw new KeyNotFoundException("Slot not found.");
+
+            if (!slot.TutorProfile.IsActive)
+                throw new InvalidOperationException(
+                    "Cannot book a slot from an inactive tutor.");
 
             if (slot.Status != SlotStatus.Open)
                 throw new InvalidOperationException("Slot is not available.");
@@ -96,7 +107,12 @@ namespace EduBook.Infrastructure.Services
                 throw new KeyNotFoundException("Booking not found.");
 
             if (booking.Status == BookingStatus.Cancelled)
-                throw new InvalidOperationException("Booking already cancelled.");
+                throw new InvalidOperationException(
+                    "Booking already cancelled.");
+
+            if (booking.Status == BookingStatus.Completed)
+                throw new InvalidOperationException(
+                    "Completed booking cannot be cancelled.");
 
             var isStudent = booking.StudentId == userId;
             var isTutor = booking.Slot.TutorProfile.UserId == userId;
