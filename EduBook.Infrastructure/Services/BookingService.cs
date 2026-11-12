@@ -49,7 +49,10 @@ namespace EduBook.Infrastructure.Services
             if (slot.TutorProfile.UserId == studentId)
                 throw new InvalidOperationException("Cannot book your own slot.");
 
-            var already = await _db.Bookings.AnyAsync(b => b.SlotId == slot.Id);
+            var already = await _db.Bookings.AnyAsync(b =>
+                b.SlotId == slot.Id &&
+                b.Status == BookingStatus.Confirmed);
+
             if (already)
                 throw new InvalidOperationException("Slot already booked.");
 

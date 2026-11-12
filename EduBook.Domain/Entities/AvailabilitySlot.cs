@@ -11,6 +11,5 @@ public class AvailabilitySlot
     public DateTimeOffset StartUtc { get; set; }
     public DateTimeOffset EndUtc { get; set; }
     public SlotStatus Status { get; set; } = SlotStatus.Open;
-
-    public Booking? Booking { get; set; }
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 }

@@ -105,12 +105,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             e.HasQueryFilter(x => !x.Subject.IsDeleted);
         });
 
-        // Booking 1-1 Slot + thuộc Student
+        // Booking 1-n Slot + thuộc Student
         builder.Entity<Booking>(e =>
         {
             e.HasOne(x => x.Slot)
-                .WithOne(s => s.Booking)
-                .HasForeignKey<Booking>(x => x.SlotId)
+                .WithMany(s => s.Bookings)
+                .HasForeignKey(x => x.SlotId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             e.HasOne(x => x.Student)
@@ -118,10 +118,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
                 .HasForeignKey(x => x.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Một slot chỉ một booking (chống double-book ở DB)
-            e.HasIndex(x => x.SlotId).IsUnique();
+            e.HasIndex(x => x.SlotId)
+                .IsUnique()
+                .HasFilter("[Status] = 0");
 
-            e.Property(x => x.Note).HasMaxLength(500);
+            e.Property(x => x.Note)
+                .HasMaxLength(500);
         });
 
         // TutorApplication
