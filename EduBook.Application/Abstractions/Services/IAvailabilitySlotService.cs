@@ -14,4 +14,7 @@ public interface IAvailabilitySlotService
     Task DeleteAsync(
         Guid userId,
         Guid slotId);
+
+    Task<IReadOnlyList<AvailabilitySlotDto>> GetTutorAvailabilityAsync(
+    Guid tutorProfileId);
 }

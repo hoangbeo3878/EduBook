@@ -149,4 +149,38 @@ public class AvailabilitySlotService : IAvailabilitySlotService
             slot.EndUtc,
             slot.Status);
     }
+
+    public async Task<IReadOnlyList<AvailabilitySlotDto>>
+    GetTutorAvailabilityAsync(Guid tutorProfileId)
+    {
+        var tutorExists = await _db.TutorProfiles
+            .AnyAsync(x =>
+                x.Id == tutorProfileId &&
+                x.IsActive);
+
+        if (!tutorExists)
+        {
+            throw new KeyNotFoundException(
+                "Active tutor profile not found.");
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        var slots = await _db.AvailabilitySlots
+            .AsNoTracking()
+            .Where(x =>
+                x.TutorProfileId == tutorProfileId &&
+                x.Status == SlotStatus.Open &&
+                x.StartUtc > now)
+            .OrderBy(x => x.StartUtc)
+            .Select(x => new AvailabilitySlotDto(
+                x.Id,
+                x.TutorProfileId,
+                x.StartUtc,
+                x.EndUtc,
+                x.Status))
+            .ToListAsync();
+
+        return slots;
+    }
 }

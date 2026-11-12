@@ -44,14 +44,22 @@ namespace EduBook.Api.Controllers
 
         // GET /api/bookings/me
         [HttpGet("me")]
-        public async Task<ActionResult<IReadOnlyList<BookingDto>>> MyBookings()
+        public async Task<ActionResult<IReadOnlyList<BookingDto>>> MyBookings(
+            [FromQuery] bool asTutor = false)
         {
             var userId = GetUserId();
-            if (userId == null) return Unauthorized();
 
-            var asTutor = User.IsInRole(UserRoles.Tutor);
-            // Nếu vừa là tutor vừa muốn xem với tư cách student: có thể thêm query ?asTutor=true
-            var list = await _bookings.GetMyBookingsAsync(userId.Value, asTutor);
+            if (userId == null)
+                return Unauthorized();
+
+            // Chỉ tài khoản có Role Tutor mới được xem theo tư cách Tutor
+            if (asTutor && !User.IsInRole(UserRoles.Tutor))
+                return Forbid();
+
+            var list = await _bookings.GetMyBookingsAsync(
+                userId.Value,
+                asTutor);
+
             return Ok(list);
         }
 
